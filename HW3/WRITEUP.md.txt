@@ -1,0 +1,91 @@
+Task 1: Window Functions vs. CTE Chains
+
+t1a_rating_in_context.sql
+What it does: Attaches each user's mean rating and each movie's mean rating to every individual rating row without collapsing the table.
+
+Why window functions are used: By using OVER (PARTITION BY ...) instead of GROUP BY, SQLite calculates the aggregate statistics (averages/counts) in the background and attaches them as new columns to all 100,000 individual rows simultaneously, rather than grouping rows together.
+
+t1b_above_both.sql
+What it does: Finds how many individual ratings are strictly higher than both their respective user's average rating and movie's average rating simultaneously, along with the overall share and the share restricted to movies with at least 20 ratings.
+
+Why it works: It builds a CTE on top of T1a's logic and uses conditional aggregation (SUM and AVG with CASE WHEN) to count and calculate ratios of ratings meeting both threshold conditions.
+
+t1c_window_rewrite.sql
+What it does: Rewrites the multi-step Week 6 exercise using a cleaner window function approach.
+
+Why it's better: In the traditional chain (t1c_week6_chain.sql), you had to group movies, join back to genres, group by genres to find genre means, and join back again. Window functions eliminate the separate genre_means CTE step and the final join-back step because the group mean can be calculated inline right where you need it.
+
+
+
+
+Task 2: Ranking Top Movies by Occupation
+
+t2_top3_row_number.sql (Version 1)
+What it does: Finds the top 3 highest-rated movies for each user occupation, filtered for movies with at least 20 ratings by users in that occupation.
+
+Key Concept (ROW_NUMBER()): Assigns a unique sequential integer to each row within a partition. Even if two movies have the exact same mean rating, ROW_NUMBER() forces them into different positions. Adding a tie-breaker (ORDER BY mean_rating DESC, n DESC, movie_id ASC) ensures that results are completely deterministic on every run.
+
+t2_top3_rank.sql (Version 2)
+What it does: Repeats the same task using RANK() instead of ROW_NUMBER().
+
+Key Difference: RANK() assigns the exact same position number to rows with identical values (ties). This means if there's a tie for the top spots, you will end up with more total rows returned because multiple movies can share rank 3 (or higher) instead of being arbitrarily cut off.
+
+
+
+
+Task 3: Sessions and Running Means
+
+t3_sessions.sql (Rating Sessions)
+What it does: Groups a user's individual rating timestamps into distinct "sessions," where a new session triggers whenever there is a gap of more than 1,800 seconds (30 minutes) from their previous rating.
+
+How the steps work:LAG(): Looks up the timestamp of the user's immediately preceding rating.
+
+Flagging: Creates a 0/1 flag (1 if the gap is $>1800$ seconds or it's the user's very first rating, 0 otherwise).
+
+Running SUM(): Uses a running sum of that flag with an explicit ROWS frame to assign a cumulative session number (session_no) to each group of ratings.
+
+
+
+t3b_running_mean.sql (Running Mean Comparison)
+
+What it does: Computes a user's running mean rating in time order using two framing rules: default framing versus an explicit ROWS frame.
+
+Why they disagree: When multiple ratings share the exact same timestamp, 
+the default ORDER BY timestamp creates a RANGE frame that treats all ties together (averaging them concurrently),
+whereas ORDER BY timestamp, movie_id ROWS processes them strictly one-by-one in a sequential row order, causing the two columns to diverge on rows with timestamp ties.
+
+
+
+Task 4: Performance, Indexes, and Range Rewrites
+
+t4_indexes.sql (Database Indexes)
+
+What it does: Adds strategic B-tree indexes (like on ratings(user_id) and ratings(movie_id)) to foreign keys.
+
+Why it helps: Without indexes, SQLite has to perform a full table scan (SCAN TABLE ratings) checking all 100,000 rows. With indexes, 
+it can instantly look up rows via a SEARCH TABLE tree structure, dramatically speeding up queries.
+
+t4d_month_range.sql (Month Range Rewrite)
+
+What it does: Rewrites a date filter that originally used strftime functions on the column.
+
+Why it's necessary: Functions applied to columns (like strftime('%m', timestamp)) hide the raw column data from the query planner,
+forcing a full table scan regardless of whether an index exists.
+Rewriting it as a direct range on the raw column (timestamp >= ? AND timestamp < ?) allows SQLite to successfully utilize the timestamp index for a fast search range.
+
+
+
+Task 5: Index Recommendation
+
+When optimizing a database, think of an index like an alphabetical index at the back of a textbook: 
+instead of reading every page (a full table scan) to find a specific user or movie, SQLite can jump straight to the right page. 
+Based on our T4 results, I strongly recommend adding indexes on `ratings(user_id)` and `ratings(movie_id)`. 
+
+Without these indexes, app queries like profile views and movie pages force SQLite to perform a slow full table scan across all 100,000 rows.
+Adding the indexes successfully transforms these execution plans into fast index searches, drastically cutting execution time. 
+However, we should leave out indexes on infrequently filtered or small columns.
+
+The primary risk of adding indexes is the performance and storage trade-off.
+While read queries become much faster, every time we insert, update, or delete a rating, the database must also update the underlying index trees.
+This overhead can slow down write operations. Furthermore, indexes consume extra disk storage space. 
+Therefore, only index columns that are frequently used in `WHERE` clauses or `JOIN` conditions.
