@@ -1,0 +1,4 @@
+Variant,CV_RMSE_log_SalePrice
+A (Target-quintile median on full table),0.16027
+B (IterativeImputer fit on full table),0.16038
+C (IterativeImputer inside Pipeline),0.16043

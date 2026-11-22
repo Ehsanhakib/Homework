@@ -1,0 +1,13 @@
+target_col,observed_col,type,observed_summary,missing_summary
+Lot Frontage,Lot Area,numeric,"mean=9,709.5, median=9,248.5","mean=12,331.0, median=10,397.5"
+Lot Frontage,Gr Liv Area,numeric,"mean=1,489.0, median=1,433.5","mean=1,553.0, median=1,488.0"
+Lot Frontage,Year Built,numeric,"mean=1,970.5, median=1,972.0","mean=1,975.5, median=1,976.5"
+Lot Frontage,SalePrice,numeric,"mean=180,099.7, median=157,500.0","mean=184,263.4, median=173,000.0"
+Lot Frontage,Lot Config,categorical,"Inside:76.5%, Corner:16.7%, CulDSac:3.8%","Inside:55.9%, Corner:21.2%, CulDSac:18.0%"
+Lot Frontage,Neighborhood,categorical,"NAmes:15.4%, OldTown:9.4%, CollgCr:9.0%","NAmes:13.9%, Gilbert:11.0%, Sawyer:10.8%"
+Mas Vnr Area,Lot Area,numeric,"mean=10,141.3, median=9,430.0","mean=10,983.9, median=9,965.0"
+Mas Vnr Area,Gr Liv Area,numeric,"mean=1,498.4, median=1,440.0","mean=1,661.6, median=1,564.0"
+Mas Vnr Area,Year Built,numeric,"mean=1,971.1, median=1,973.0","mean=2,002.7, median=2,006.0"
+Mas Vnr Area,SalePrice,numeric,"mean=180,380.3, median=160,000.0","mean=233,348.7, median=207,500.0"
+Mas Vnr Area,Lot Config,categorical,"Inside:73.1%, Corner:17.4%, CulDSac:6.1%","Inside:65.2%, Corner:21.7%, CulDSac:8.7%"
+Mas Vnr Area,Neighborhood,categorical,"NAmes:15.2%, CollgCr:9.1%, OldTown:8.2%","Somerst:43.5%, Gilbert:21.7%, CollgCr:8.7%"
